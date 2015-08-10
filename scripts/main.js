@@ -1,0 +1,1 @@
+!function(t){"use strict";t(function(){t(".button-collapse").sideNav()})}(jQuery);
