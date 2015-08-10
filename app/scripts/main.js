@@ -1,1 +1,5 @@
-console.log('\'Allo \'Allo!');
+(function($) {
+  $(function() {
+    $('.button-collapse').sideNav();
+  });
+})(jQuery);
