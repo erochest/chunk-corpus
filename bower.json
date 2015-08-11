@@ -3,7 +3,9 @@
   "private": true,
   "dependencies": {
     "modernizr": "~2.8.1",
-    "materialize": "~0.97.0"
+    "materialize": "~0.97.0",
+    "zip.js": "*",
+    "bacon": "~0.7.71"
   },
   "overrides": {
     "bootstrap-sass": {
