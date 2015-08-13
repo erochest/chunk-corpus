@@ -79,7 +79,10 @@
     if (i < files.length) {
       var f = files[i];
       writer.add(f.name, new zip.TextReader(f.contents), function() {
+        var progress = $('#chunk_progress');
         zipAdd(writer, files, i + 1, k);
+        progress
+          .attr('value', 1 + parseInt(progress.attr('value')));
       });
     } else {
       k(writer);
@@ -139,7 +142,11 @@
         .flatMap(readTextFile)
         .map(over('contents', tokenize))
         .map(over('contents', function(tokens) {
-          return chunk(tokens, size, step);
+          var chunks = chunk(tokens, size, step),
+              progress = $('#chunk_progress');
+          progress
+            .attr('max', chunks.length + parseInt(progress.attr('max')) - 1);
+          return chunks;
         }))
         .flatMap(spread('contents'))
         .map(updateOutputFileName)
@@ -183,10 +190,19 @@
         return evt.originalEvent.dataTransfer.files;
       });
 
-      // TODO: modal and progress bar
       Bacon.mergeAll(inputFiles, dropFiles)
+        .map(function(v) {
+          $('#progress_modal').openModal();
+          $('#chunk_progress')
+            .attr('max', v.length)
+            .attr('value', 0);
+          return v;
+        })
         .flatMap(zipChunks(size, step))
-        .onValue(saveZip);
+        .onValue(function(z) {
+          saveZip(z);
+          $('#progress_modal').closeModal();
+        });
 
     } else {
       $('#error_modal').openModal();
