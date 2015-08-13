@@ -203,6 +203,7 @@
           saveZip(z);
           $('#progress_modal').closeModal();
         });
+        // TODO close the modal onEnd
 
     } else {
       $('#error_modal').openModal();
