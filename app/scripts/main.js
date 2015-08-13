@@ -138,9 +138,13 @@
   var zipChunks = function(size, step) {
     return function(files) {
       return Bacon.sequentially(0, files)
+        .log('sequentially')
         .filter(function(f) { return f.type === 'text/plain'; })
+        .log('filter (text/plain)')
         .flatMap(readTextFile)
+        .log('readTextFile')
         .map(over('contents', tokenize))
+        .log('tokenize')
         .map(over('contents', function(tokens) {
           var chunks = chunk(tokens, size, step),
               progress = $('#chunk_progress');
@@ -148,12 +152,19 @@
             .attr('max', chunks.length + parseInt(progress.attr('max')) - 1);
           return chunks;
         }))
+        .log('chunk')
         .flatMap(spread('contents'))
+        .log('spread')
         .map(updateOutputFileName)
+        .log('updateOutputFileName')
         .map(over('contents', function(c) { return c.data.join(' '); }))
+        .log('join')
         .fold([], function(a, f) { a.push(f); return a; })
+        .log('fold')
         .filter(function(xs) { return xs.length > 0; })
+        .log('filter (empty)')
         .flatMap(zipAll)
+        .log('zipAll')
         .flatMap(finis);
     };
   };
@@ -191,6 +202,7 @@
       });
 
       Bacon.mergeAll(inputFiles, dropFiles)
+        .log('mergeAll')
         .map(function(v) {
           $('#progress_modal').openModal();
           $('#chunk_progress')
@@ -198,7 +210,9 @@
             .attr('value', 0);
           return v;
         })
+        .log('progress_modal.openModal')
         .flatMap(zipChunks(size, step))
+        .log('zipChunks')
         .onValue(function(z) {
           saveZip(z);
           $('#progress_modal').closeModal();
