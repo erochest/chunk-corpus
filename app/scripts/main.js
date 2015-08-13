@@ -9,7 +9,7 @@
 (function($) {
   'use strict';
 
-  zip.workerScriptsPath = '/scripts/';
+  zip.workerScriptsPath = '/chunk-corpus/scripts/';
 
   var tokenRegex = /[\w'-–—]*\w/g;
 
