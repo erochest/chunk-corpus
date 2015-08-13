@@ -1,34 +1,21 @@
 /* global
- * jQuery
- * Bacon
- * zip
+   jQuery
+   Bacon
+   zip
+   saveAs
  */
 
 
 (function($) {
   'use strict';
 
-  zip.workerScriptsPath = "/scripts/";
+  zip.workerScriptsPath = '/scripts/';
 
   var tokenRegex = /[\w'-–—]*\w/g;
 
-  var logAll = function(xs) {
-    for (var i=0, x; x=xs[i]; i++) {
-      console.log(x);
-    }
-  };
-
-  var outputFileName = function(file, tokenStart) {
-    var refilename = /^(.+)\.[^.]*$/,
-        base       = file.replace(refilename, '$1'),
-        offset     = padLeft(tokenStart.toString(), 6, '0');
-
-    return base + '-' + offset + '.txt';
-  };
-
   var padLeft = function(string, width, padChar) {
     var paddingArray = [string],
-        size         = string.length;
+        size = string.length;
 
     while (size < width) {
       paddingArray.push(padChar);
@@ -36,6 +23,14 @@
     }
 
     return paddingArray.reverse().join('');
+  };
+
+  var outputFileName = function(file, tokenStart) {
+    var refilename = /^(.+)\.[^.]*$/,
+        base = file.replace(refilename, '$1'),
+        offset = padLeft(tokenStart.toString(), 6, '0');
+
+    return base + '-' + offset + '.txt';
   };
 
   var updateOutputFileName = function(fileChunk) {
@@ -50,7 +45,7 @@
   // return { start: ...., data: .... }
   var chunk = function(xs, size, step) {
     var output = [],
-        i      = 0;
+        i = 0;
 
     if (xs.length < size) {
       output.push(xs);
@@ -58,7 +53,7 @@
       while (i <= xs.length) {
         output.push({
           start: i,
-          data: xs.slice(i, i+size)
+          data: xs.slice(i, i + size)
         });
         i += step;
       }
@@ -84,7 +79,7 @@
     if (i < files.length) {
       var f = files[i];
       writer.add(f.name, new zip.TextReader(f.contents), function() {
-        zipAdd(writer, files, i+1, k);
+        zipAdd(writer, files, i + 1, k);
       });
     } else {
       k(writer);
@@ -118,13 +113,14 @@
 
   var spread = function(property) {
     return function(x) {
-      var xs    = x[property].slice(),
+      var xs = x[property].slice(),
           names = Object.getOwnPropertyNames(x);
 
-      for (var i=0; i<xs.length; i++) {
+      for (var i = 0; i < xs.length; i++) {
         var y = {};
 
-        for (var j=0, n; n=names[j]; j++) {
+        for (var j = 0; j < names.length; j++) {
+          var n = names[j];
           y[n] = x[n];
         }
 
@@ -136,17 +132,10 @@
     };
   };
 
-  var logEvents = function(msg) {
-    return function(evt) {
-      console.log(msg, evt);
-      return this.push(evt);
-    };
-  };
-
   var zipChunks = function(size, step) {
     return function(files) {
       return Bacon.sequentially(0, files)
-        .filter(function(f) { return f.type == 'text/plain'; })
+        .filter(function(f) { return f.type === 'text/plain'; })
         .flatMap(readTextFile)
         .map(over('contents', tokenize))
         .map(over('contents', function(tokens) {
@@ -165,14 +154,14 @@
   $(function() {
 
     if (window.File && window.FileReader && window.FileList && window.Blob) {
-      var fileInput  = $('#input_files'),
+      var fileInput = $('#input_files'),
           dropTarget = $('#drop_target'),
-          size       = parseInt($('#chunk_size').val()),
-          step       = parseInt($('#chunk_step').val()),
-          change     = null,
-          drop       = null,
+          size = parseInt($('#chunk_size').val()),
+          step = parseInt($('#chunk_step').val()),
+          change = null,
+          drop = null,
           inputFiles = null,
-          dropFiles  = null;
+          dropFiles = null;
 
       change = fileInput.asEventStream('change');
       inputFiles = change.flatMap(function(evt) {
