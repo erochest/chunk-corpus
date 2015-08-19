@@ -9,7 +9,8 @@
 (function($) {
   'use strict';
 
-  zip.workerScriptsPath = '/chunk-corpus/scripts/';
+  // zip.workerScriptsPath = '/chunk-corpus/scripts/';
+  zip.workerScriptsPath = '/scripts/';
 
   var tokenRegex = /[\w'-–—]*\w/g;
 
@@ -135,27 +136,35 @@
     };
   };
 
-  var zipChunks = function(size, step) {
-    return function(files) {
-      return Bacon.sequentially(0, files)
-        .filter(function(f) { return f.type === 'text/plain'; })
-        .flatMap(readTextFile)
-        .map(over('contents', tokenize))
-        .map(over('contents', function(tokens) {
-          var chunks = chunk(tokens, size, step),
-              progress = $('#chunk_progress');
-          progress
-            .attr('max', chunks.length + parseInt(progress.attr('max')) - 1);
-          return chunks;
-        }))
-        .flatMap(spread('contents'))
-        .map(updateOutputFileName)
-        .map(over('contents', function(c) { return c.data.join(' '); }))
-        .fold([], function(a, f) { a.push(f); return a; })
-        .filter(function(xs) { return xs.length > 0; })
-        .flatMap(zipAll)
-        .flatMap(finis);
-    };
+  var zipChunks = function(size, step, files) {
+    return Bacon.sequentially(0, files)
+      .filter(function(f) { return f.type === 'text/plain'; })
+      .flatMap(readTextFile)
+      .map(over('contents', tokenize))
+      .map(over('contents', function(tokens) {
+        var chunks = chunk(tokens, size, step),
+        progress = $('#chunk_progress');
+        progress
+          .attr('max', chunks.length + parseInt(progress.attr('max')) - 1);
+        return chunks;
+      }))
+      .flatMap(spread('contents'))
+      .map(updateOutputFileName)
+      .map(over('contents', function(c) { return c.data.join(' '); }))
+      .fold([], function(a, f) { a.push(f); return a; })
+      .filter(function(xs) { return xs.length > 0; })
+      .flatMap(zipAll)
+      .flatMap(finis);
+  };
+
+  var numberProperty = function(element) {
+    return element
+      .asEventStream('change')
+      .map(function(evt) {
+        return parseInt(evt.target.value);
+      })
+      .filter(function(v) { return !isNaN(v); })
+      .toProperty(element.val());
   };
 
   $(function() {
@@ -163,12 +172,15 @@
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       var fileInput = $('#input_files'),
           dropTarget = $('#drop_target'),
-          size = parseInt($('#chunk_size').val()),
-          step = parseInt($('#chunk_step').val()),
+          size = null,
+          step = null,
           change = null,
           drop = null,
           inputFiles = null,
           dropFiles = null;
+
+      size = numberProperty($('#chunk_size'));
+      step = numberProperty($('#chunk_step'));
 
       change = fileInput.asEventStream('change');
       inputFiles = change.flatMap(function(evt) {
@@ -190,20 +202,20 @@
         return evt.originalEvent.dataTransfer.files;
       });
 
-      Bacon.mergeAll(inputFiles, dropFiles)
+      var fileProgress = Bacon.mergeAll(inputFiles, dropFiles)
         .map(function(v) {
           $('#progress_modal').openModal();
           $('#chunk_progress')
             .attr('max', v.length)
             .attr('value', 0);
           return v;
-        })
-        .flatMap(zipChunks(size, step))
+        });
+      Bacon.combineWith(zipChunks, size, step, fileProgress)
+        .flatMap(function(x) { return x; })
         .onValue(function(z) {
           saveZip(z);
           $('#progress_modal').closeModal();
         });
-        // TODO close the modal onEnd
 
     } else {
       $('#error_modal').openModal();
