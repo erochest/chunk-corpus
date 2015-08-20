@@ -4,9 +4,57 @@ import gulpLoadPlugins from 'gulp-load-plugins';
 import browserSync from 'browser-sync';
 import del from 'del';
 import {stream as wiredep} from 'wiredep';
+import purescript from 'gulp-purescript';
+import run from 'gulp-run';
+import runSequence from 'run-sequence';
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
+
+const paths = {
+    src: 'src/**/*.purs',
+    ffi: 'src/**/*.js',
+    bowerSrc: 'bower_components/purescript-*/src/**/*.purs',
+    bowerFfi: 'bower_components/purescript-*/src/**/*.js',
+    dest: './output',
+    dist: './app/scripts/ps.js',
+    docsDest: 'README.md'
+};
+
+const options = {
+    compiler: {
+        src: [paths.src, paths.bowerSrc],
+        ffi: [paths.ffi, paths.bowerFfi]
+    },
+    bundle: {
+        src: paths.dest + '/**/*.js',
+        output: paths.dist,
+        main: 'Chunk.Main'
+    },
+    pscDocs: {
+        src: paths.src
+    }
+};
+
+gulp.task('make', () => {
+    return purescript.psc(options.compiler);
+});
+
+gulp.task('bundle', ['make'], () => {
+    return purescript.pscBundle(options.bundle);
+});
+
+gulp.task('docs', () => {
+    return purescript.pscDocs(options.pscDocs);
+});
+
+gulp.task('dotpsci', () => {
+    return purescript.psci(options.compiler).pipe(gulp.dest('.'));
+});
+
+gulp.task('watch-bundle', () => {
+    gulp.watch(paths.src, ['bundle']);
+});
 
 gulp.task('styles', () => {
   return gulp.src('app/styles/*.scss')
@@ -41,7 +89,7 @@ const testLintOptions = {
 gulp.task('lint', lint('app/scripts/**/*.js'));
 gulp.task('lint:test', lint('test/spec/**/*.js', testLintOptions));
 
-gulp.task('html', ['styles'], () => {
+gulp.task('html', ['bundle', 'styles'], () => {
   const assets = $.useref.assets({searchPath: ['.tmp', 'app', '.']});
 
   return gulp.src('app/*.html')
@@ -111,6 +159,8 @@ gulp.task('serve', ['styles', 'fonts'], () => {
   gulp.watch('app/styles/**/*.scss', ['styles']);
   gulp.watch('app/fonts/**/*', ['fonts']);
   gulp.watch('bower.json', ['wiredep', 'fonts']);
+  gulp.watch(paths.src, ['bundle']);
+  gulp.watch(paths.ffi, ['bundle']);
 });
 
 gulp.task('serve:dist', () => {
