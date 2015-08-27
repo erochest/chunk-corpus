@@ -172,6 +172,7 @@
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       var fileInput = $('#input_files'),
           dropTarget = $('#drop_target'),
+          done = null,
           size = null,
           step = null,
           change = null,
@@ -181,6 +182,12 @@
 
       size = numberProperty($('#chunk_size'));
       step = numberProperty($('#chunk_step'));
+
+      done = dropTarget
+        .asEventStream('done')
+        .map(function() {
+          return [];
+        });
 
       change = fileInput.asEventStream('change');
       inputFiles = change.flatMap(function(evt) {
@@ -202,7 +209,7 @@
         return evt.originalEvent.dataTransfer.files;
       });
 
-      var fileProgress = Bacon.mergeAll(inputFiles, dropFiles)
+      var fileProgress = Bacon.mergeAll(inputFiles, dropFiles, done)
         .map(function(v) {
           $('#progress_modal').openModal();
           $('#chunk_progress')
@@ -215,6 +222,7 @@
         .onValue(function(z) {
           saveZip(z);
           $('#progress_modal').closeModal();
+          dropTarget.trigger($.Event('done'));
         });
 
     } else {
