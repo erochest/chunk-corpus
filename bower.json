@@ -11,7 +11,8 @@
     "purescript-eff": "~0.1.0",
     "purescript-console": "~0.1.1",
     "purescript-functions": "~0.1.0",
-    "purescript-dom": "~0.2.2"
+    "purescript-dom": "~0.2.2",
+    "purescript-datetime": "~0.9.0"
   },
   "overrides": {
     "bootstrap-sass": {
