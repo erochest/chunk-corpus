@@ -9,6 +9,7 @@
 (function($) {
   'use strict';
 
+  // TODO: Switch these based on development or production
   zip.workerScriptsPath = '/chunk-corpus/scripts/';
   // zip.workerScriptsPath = '/scripts/';
 
@@ -45,18 +46,21 @@
 
   // return { start: ...., data: .... }
   var chunk = function(xs, size, step) {
-    var output = [],
-        i = 0;
 
-    if (xs.length < size) {
+    var output = [],
+        i = 0,
+        stepInt = +step,
+        sizeInt = +size;
+
+    if (xs.length < sizeInt) {
       output.push(xs);
     } else {
       while (i <= xs.length) {
         output.push({
           start: i,
-          data: xs.slice(i, i + size)
+          data: xs.slice(i, i + sizeInt)
         });
-        i += step;
+        i += stepInt;
       }
     }
 
@@ -94,7 +98,7 @@
     return Bacon.fromCallback(function(callback) {
       zip.createWriter(new zip.BlobWriter(), function(writer) {
         zipAdd(writer, files, 0, callback);
-      });
+      }, function(error) { console.log(error); });
     });
   };
 
@@ -142,8 +146,8 @@
       .flatMap(readTextFile)
       .map(over('contents', tokenize))
       .map(over('contents', function(tokens) {
-        var chunks = chunk(tokens, size, step),
-        progress = $('#chunk_progress');
+        var chunks = chunk(tokens, size, step);
+        var progress = $('#chunk_progress');
         progress
           .attr('max', chunks.length + parseInt(progress.attr('max')) - 1);
         return chunks;
