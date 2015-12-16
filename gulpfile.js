@@ -140,6 +140,12 @@ gulp.task('serve:test', function() {
   gulp.watch('test/spec/**/*.js', ['lint:test']);
 });
 
+// deploy the dist dir to gh-pages
+gulp.task('deploy', function() {
+  return gulp.src('./dist/**/*')
+    .pipe($.ghPages({ branch: "gh-pages", message: "Merge from master branch" }));
+});
+
 // inject bower components
 gulp.task('wiredep', function() {
   gulp.src('app/styles/*.scss')
