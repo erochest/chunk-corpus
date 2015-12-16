@@ -16,12 +16,21 @@ $icon-font-path: '../fonts/';
     font-size: 36px;
 }
 
+.card {
+  @extend .amber, .lighten-3;
+}
+
 #drop_target {
     height: 150px;
     width: 100%;
     font-size: larger;
+    @extend .center-align, .white-text;
 }
 
 #chunk_progress {
     width: 100%;
+}
+
+i.prefix {
+  @extend .amber-text;
 }
