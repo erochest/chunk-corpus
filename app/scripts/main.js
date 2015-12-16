@@ -10,8 +10,8 @@
   'use strict';
 
   // TODO: Switch these based on development or production
-  zip.workerScriptsPath = '/chunk-corpus/scripts/';
-  // zip.workerScriptsPath = '/scripts/';
+  // zip.workerScriptsPath = '/chunk-corpus/scripts/';
+  zip.workerScriptsPath = '/scripts/';
 
   var tokenRegex = /[\w'-–—]*\w/g;
 
@@ -215,18 +215,22 @@
 
       var fileProgress = Bacon.mergeAll(inputFiles, dropFiles, done)
         .map(function(v) {
-          $('#progress_modal').openModal();
-          $('#chunk_progress')
-            .attr('max', v.length)
-            .attr('value', 0);
+          if (v.length > 0) {
+            $('#progress_modal').openModal();
+            $('#chunk_progress')
+              .attr('max', v.length)
+              .attr('value', 0);
+          }
           return v;
         });
+
       Bacon.combineWith(zipChunks, size, step, fileProgress)
         .flatMap(function(x) { return x; })
         .onValue(function(z) {
           saveZip(z);
           $('#progress_modal').closeModal();
           dropTarget.trigger($.Event('done'));
+
         });
 
     } else {
